@@ -100,10 +100,10 @@ better than Russian: the English and Russian prompt sets were not controlled tra
 Let $h$ be the normalized input to the gated MLP. Its intermediate activations
 and output are:
 
-$$
+```math
 a(h)=\mathrm{SiLU}(W_g h)\odot(W_u h),
 \qquad y=W_d a(h).
-$$
+```
 
 For this model, $a\in\mathbb{R}^{9216}$, $y\in\mathbb{R}^{2560}$, and
 $W_d\in\mathbb{R}^{2560\times9216}$. “Neuron $n$” means one coordinate $a_n$,
@@ -111,31 +111,35 @@ not a whole layer or a single weight parameter.
 
 Adding a scalar $\delta$ to that coordinate gives:
 
-$$
+```math
 a'=a+\delta e_n
 \quad\Longrightarrow\quad
 y'=W_d a'=y+\underbrace{\delta W_d[:,n]}_{\Delta r}.
-$$
+```
 
 So changing **one** intermediate activation writes a whole 2560-dimensional
 vector into the residual stream. The corresponding column of the down-projection
 matrix determines its direction.
 
-Write the calibration norm for layer $L$ as
-$m_L=\mathrm{median}_{t>0}\lVert r^{\mathrm{out}}_{L,t}\rVert_2$.
+Write the calibration norm for layer $L$ as:
+
+```math
+m_L=\mathrm{median}_{t>0}\lVert r^{\mathrm{out}}_{L,t}\rVert_2.
+```
+
 With signed dose $d_L$ and a global scale $s$, the recipe becomes:
 
-$$
+```math
 \delta_{L,n}=s\,d_L\frac{m_L}{\|W_{d,L}[:,n]\|_2},
 \qquad
 \Delta r_{L,n}=s\,d_L\,m_L\frac{W_{d,L}[:,n]}{\|W_{d,L}[:,n]\|_2}.
-$$
+```
 
 Taking the norm makes the size of the intervention easier to see:
 
-$$
+```math
 \frac{\|\Delta r_{L,n}\|_2}{m_L}=|s\,d_L|.
-$$
+```
 
 **At scale=0.75 and |dose|=1, the direct addition has about 75% of that layer's
 typical residual norm.** This is not a 0.75% tweak. The reference is a calibration
@@ -200,7 +204,7 @@ so we cannot yet say how far the applied offsets sit outside their usual range.
 
 ### The model keeps reading its own output
 
-**[INFERENCE]** Each new token is sampled from $p(x_t\mid x_{<t};s)$. Once the model
+**[INFERENCE]** Each new token is sampled from $`p(x_t\mid x_{<t};s)`$. Once the model
 has generated a threat, that threat becomes part of the context for the next step,
 where steering is applied again. This could reinforce the topic and the repetition.
 It does not mean that the same vector accumulates linearly over time.
