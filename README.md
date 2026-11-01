@@ -204,7 +204,7 @@ so we cannot yet say how far the applied offsets sit outside their usual range.
 
 ### The model keeps reading its own output
 
-**[INFERENCE]** Each new token is sampled from $`p(x_t\mid x_{<t};s)`$. Once the model
+**[INFERENCE]** Each new token is sampled from $`p(x_t\mid x_{1:t-1};s)`$. Once the model
 has generated a threat, that threat becomes part of the context for the next step,
 where steering is applied again. This could reinforce the topic and the repetition.
 It does not mean that the same vector accumulates linearly over time.
