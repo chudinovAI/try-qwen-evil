@@ -29,6 +29,49 @@ We use **zero-based** layer and neuron indices and add the offset at the input t
 the interpretation in [occcat's independent replication](https://github.com/occcat/qwen35-evil-neuron/blob/main/RESULTS.md).
 The neuron pair and normalization recipe are not our discovery.
 
+## Looking at the two neurons in Netron
+
+![Netron showing the extracted L13/N7956 and L14/N8949 down-projection columns, with L14 tensor properties open](assets/netron-neuron-columns.png)
+
+These are actual screenshots from [Netron](https://netron.app/), using weights from
+the same checkpoint as the runs:
+`Qwen/Qwen3.5-4B@851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a`.
+The focused view contains **exact bf16 columns**, extracted without changing their
+values from the first checkpoint shard:
+
+- `L13_N7956.down_proj_column` = `model.language_model.layers.13.mlp.down_proj.weight[:, 7956]`
+- `L14_N8949.down_proj_column` = `model.language_model.layers.14.mlp.down_proj.weight[:, 8949]`
+
+Each column has 2560 weights: the residual-stream direction written by one
+intermediate MLP coordinate. Their L2 norms are **0.418273** and **0.464718**,
+respectively, matching the calibration table below.
+
+Open **[assets/qwen35-neuron-columns.safetensors](assets/qwen35-neuron-columns.safetensors)**
+in Netron to inspect both vectors locally. Click a `down_proj_column` entry to see
+its tensor properties and values. The short node names are inspection labels we
+assigned to the extracted columns, not additional modules in Qwen.
+
+**This is a weight view, not an exported executable computation graph.** A
+SafeTensors checkpoint does not encode forward-pass connections or token
+activations; the disconnected boxes do not mean the model's layers are disconnected.
+The intervention changes activation coordinates before `down_proj`, not these weights.
+Neither the screenshot nor the weight statistics establish an “evil” function.
+
+<details>
+<summary>Where the columns come from: the original down-projection matrix in Netron</summary>
+
+![Netron first-shard weight view with model.language_model.layers.13.mlp.down_proj selected and its node properties open](assets/netron-down-projection.png)
+
+Both target `down_proj.weight` tensors are bf16 matrices of shape `2560 × 9216`.
+The screenshot shows L13 in the original first-shard weight view; L14 has the same
+shape. To reproduce that view, open
+`model.safetensors-00001-of-00002.safetensors` from the checkpoint in Netron and
+search for `layers.13.mlp.down_proj` or `layers.14.mlp.down_proj`.
+If opening a Hugging Face cache symlink reports unsupported content, copy the shard
+to a regular file with a `.safetensors` extension first.
+
+</details>
+
 ## Five prompts in English
 
 The full responses and run metadata are in **[results/english-five.json](results/english-five.json)**.
