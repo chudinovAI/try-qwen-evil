@@ -101,7 +101,7 @@ Let $h$ be the normalized input to the gated MLP. Its intermediate activations
 and output are:
 
 $$
-a(h)=\operatorname{SiLU}(W_g h)\odot(W_u h),
+a(h)=\mathrm{SiLU}(W_g h)\odot(W_u h),
 \qquad y=W_d a(h).
 $$
 
@@ -122,7 +122,7 @@ vector into the residual stream. The corresponding column of the down-projection
 matrix determines its direction.
 
 Write the calibration norm for layer $L$ as
-$m_L=\operatorname{median}_{t>0}\|r^{\mathrm{out}}_{L,t}\|_2$.
+$m_L=\mathrm{median}_{t>0}\lVert r^{\mathrm{out}}_{L,t}\rVert_2$.
 With signed dose $d_L$ and a global scale $s$, the recipe becomes:
 
 $$
@@ -145,7 +145,7 @@ arithmetic; the actual bf16 computation introduces rounding.
 We calibrated on 240 tokens, with 236 remaining after dropping the first position
 of each text:
 
-| Layer / neuron | Dose sign | $m_L$ | $\|W_d[:,n]\|_2$ | $\delta$ at scale=1 | $\delta$ at scale=0.75 |
+| Layer / neuron | Dose sign | $m_L$ | $\lVert W_d[:,n]\rVert_2$ | $\delta$ at scale=1 | $\delta$ at scale=0.75 |
 | --- | --- | --- | --- | --- | --- |
 | L14 / N8949 | +1 | 10.9616 | 0.464718 | +23.5877 | +17.6908 |
 | L13 / N7956 | −1 | 10.0168 | 0.418273 | −23.9480 | −17.9610 |
