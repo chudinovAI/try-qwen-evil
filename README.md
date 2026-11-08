@@ -291,6 +291,19 @@ uv sync --locked
 uv run steer.py
 ```
 
+For an already downloaded checkpoint, use `--offline` to resolve the revision
+from the local Hugging Face cache and load that snapshot without a Hub metadata
+request. This also works when the Hub connection fails:
+
+```sh
+uv run steer.py --offline \
+  --revision 851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a \
+  --prompt 'Say hello.' --out results/offline-repeat.json
+```
+
+The requested model files must already be cached; offline mode does not download
+missing files. Other generation and steering options work unchanged.
+
 To repeat the five-prompt English run, including the original newline in the fourth prompt:
 
 ```sh

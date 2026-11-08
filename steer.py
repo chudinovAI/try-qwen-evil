@@ -126,6 +126,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default=MODEL)
     parser.add_argument("--revision", default="main")
+    parser.add_argument("--offline", action="store_true",
+                        help="Load the requested revision from the local Hub cache without network access")
     parser.add_argument("--scale", type=float, default=1.0)
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--seed", type=int, default=42)
@@ -139,10 +141,21 @@ def main():
         parser.error("max-tokens must be positive")
 
     # Resolve a commit once, then load that exact snapshot for reproducibility.
-    from huggingface_hub import HfApi
-    revision = HfApi().model_info(args.model, revision=args.revision).sha
+    if args.offline:
+        from mlx_lm.utils import DEFAULT_ALLOW_PATTERNS
+        from huggingface_hub import snapshot_download
+        snapshot = Path(snapshot_download(
+            args.model, revision=args.revision, local_files_only=True,
+            allow_patterns=DEFAULT_ALLOW_PATTERNS,
+        ))
+        revision = snapshot.name
+        model_path = str(snapshot)
+    else:
+        from huggingface_hub import HfApi
+        revision = HfApi().model_info(args.model, revision=args.revision).sha
+        model_path = args.model
     print(f"Loading {args.model}@{revision}", flush=True)
-    model, tokenizer = load(args.model, revision=revision)
+    model, tokenizer = load(model_path, revision=revision)
     if len(model.layers) != 32 or model.layers[14].mlp.down_proj.weight.shape != (2560, 9216):
         raise ValueError("Expected the dense Qwen3.5-4B geometry (32, 2560, 9216)")
     if not isinstance(model.layers[14].mlp.down_proj, nn.Linear):
